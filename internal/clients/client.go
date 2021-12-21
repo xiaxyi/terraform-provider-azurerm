@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	//"github.com/hashicorp/terraform-provider-azurerm/internal/services/webpubsub/sdk/2021-10-01/webpubsub"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/validation"
@@ -105,6 +106,7 @@ import (
 	videoAnalyzer "github.com/hashicorp/terraform-provider-azurerm/internal/services/videoanalyzer/client"
 	vmware "github.com/hashicorp/terraform-provider-azurerm/internal/services/vmware/client"
 	web "github.com/hashicorp/terraform-provider-azurerm/internal/services/web/client"
+	webpubsub "github.com/hashicorp/terraform-provider-azurerm/internal/services/webpubsub/client"
 )
 
 type Client struct {
@@ -212,6 +214,7 @@ type Client struct {
 	VideoAnalyzer         *videoAnalyzer.Client
 	Vmware                *vmware.Client
 	Web                   *web.Client
+	Webpubsub             *webpubsub.Client
 }
 
 // NOTE: it should be possible for this method to become Private once the top level Client's removed
@@ -322,6 +325,7 @@ func (client *Client) Build(ctx context.Context, o *common.ClientOptions) error 
 	client.VideoAnalyzer = videoAnalyzer.NewClient(o)
 	client.Vmware = vmware.NewClient(o)
 	client.Web = web.NewClient(o)
+	client.Webpubsub = webpubsub.NewClient(o)
 
 	return nil
 }
