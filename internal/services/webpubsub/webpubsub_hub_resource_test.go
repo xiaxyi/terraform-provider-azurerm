@@ -64,14 +64,14 @@ func (r WebPubsubHubResource) basic(data acceptance.TestData) string {
 %s
 
 resource "azurerm_web_pubsub_hub" "test" {
-  name 					= "acctestwpsh%d"
-  web_pubsub_name 		= azurerm_web_pubsub.test.name
-  resource_group_name 	= azurerm_resource_group.test.name
+  name                = "acctestwpsh%d"
+  web_pubsub_name     = azurerm_web_pubsub.test.name
+  resource_group_name = azurerm_resource_group.test.name
 
   event_handler {
-    url_template 		= "https://test.com/api/{hub}/{event}"
-    user_event_pattern 	= "event1, event2"
-    system_events 		= ["connect", "connected"]
+    url_template       = "https://test.com/api/{hub}/{event}"
+    user_event_pattern = "event1, event2"
+    system_events      = ["connect", "connected"]
   }
 }
 `, r.template(data), data.RandomInteger)
@@ -89,18 +89,18 @@ resource "azurerm_user_assigned_identity" "test" {
 
 
 resource "azurerm_web_pubsub_hub" "test" {
-  name 					= "acctestwpsh%d"
-  web_pubsub_name 		= azurerm_web_pubsub.test.name
-  resource_group_name 	= azurerm_resource_group.test.name
+  name                = "acctestwpsh%d"
+  web_pubsub_name     = azurerm_web_pubsub.test.name
+  resource_group_name = azurerm_resource_group.test.name
 
   event_handler {
-    url_template 		= "https://test.com/api/{hub}/{event}"
-    user_event_pattern 	= "event1, event2"
-    system_events 		= ["connect", "connected"]
-	auth {
-		type 						= "ManagedIdentity"
-		managed_identity_resource 	= azurerm_user_assigned_identity.test.id
-	}
+    url_template       = "https://test.com/api/{hub}/{event}"
+    user_event_pattern = "event1, event2"
+    system_events      = ["connect", "connected"]
+    auth {
+      type                      = "ManagedIdentity"
+      managed_identity_resource = azurerm_user_assigned_identity.test.id
+    }
   }
 }
 `, r.template(data), data.RandomInteger, data.RandomInteger)
@@ -117,10 +117,10 @@ resource "azurerm_resource_group" "test" {
   location = "%s"
 }
 
-resource "azurerm_web_pubsub" "test"{
-  name 					= "acctest-webpubsub-%d"
-  resource_group_name 	= azurerm_resource_group.test.name
-  location 				= azurerm_resource_group.test.location
+resource "azurerm_web_pubsub" "test" {
+  name                = "acctest-webpubsub-%d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
   sku {
     name = "Standard_S1"
   }

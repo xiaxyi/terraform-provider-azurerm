@@ -3,12 +3,12 @@ subcategory: "web pubsub"
 layout: "azurerm"
 page_title: "Azure Resource Manager: azurerm_web_pubsub"
 description: |-
-Manages an Azure Web Pubsub service.
+  Manages an Azure Web Pubsub service.
 ---
 
 # azurerm_web_pubsub
 
-Manages an Azure Web Pubsub Service
+Manages an Azure Web Pubsub Service.
 
 ## Example Usage
 

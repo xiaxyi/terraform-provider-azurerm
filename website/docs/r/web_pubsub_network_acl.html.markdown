@@ -3,7 +3,7 @@ subcategory: "Web Pubsub"
 layout: "azurerm"
 page_title: "Azure Resource Manager: azurerm_web_pubsub_network_acl"
 description: |-
-Manages the Network ACL for a Web Pubsub service.
+  Manages the Network ACL for a Web Pubsub service.
 ---
 
 # azurerm_web_pubsub_network_acl

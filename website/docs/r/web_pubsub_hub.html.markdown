@@ -3,7 +3,7 @@ subcategory: "Web Pubsub"
 layout: "azurerm"
 page_title: "Azure Resource Manager: azurerm_web_pubsub_hub"
 description: |-
-Manages the hub settings for a Web Pubsub service.
+  Manages the hub settings for a Web Pubsub service.
 ---
 
 # azurerm_web_pubsub_hub

@@ -289,18 +289,18 @@ provider "azurerm" {
   features {}
 }
 
-resource "azurerm_resource_group" "test"{
-    name = "acctestRG-webpubsub-%d"
-    location = "%s"
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-webpubsub-%d"
+  location = "%s"
 }
 
-resource "azurerm_web_pubsub" "test"{
-    name = "acctestRG-webpubsub-%d"
-    resource_group_name = azurerm_resource_group.test.name
-    location = azurerm_resource_group.test.location
-    sku {
-        name = "Standard_S1"
-    }
+resource "azurerm_web_pubsub" "test" {
+  name                = "acctestRG-webpubsub-%d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+  sku {
+    name = "Standard_S1"
+  }
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger)
 }
