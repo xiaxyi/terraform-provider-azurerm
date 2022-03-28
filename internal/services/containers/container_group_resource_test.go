@@ -595,7 +595,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -678,7 +678,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -726,7 +726,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -769,7 +769,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -805,7 +805,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   exposed_port {
@@ -850,7 +850,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -880,7 +880,7 @@ resource "azurerm_container_group" "import" {
   name                = azurerm_container_group.test.name
   location            = azurerm_container_group.test.location
   resource_group_name = azurerm_container_group.test.resource_group_name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -916,7 +916,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -971,7 +971,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -1027,7 +1027,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -1069,7 +1069,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -1117,7 +1117,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   exposed_port {
@@ -1174,7 +1174,7 @@ resource "azurerm_subnet" "test" {
   name                 = "testsubnet"
   resource_group_name  = azurerm_resource_group.test.name
   virtual_network_name = azurerm_virtual_network.test.name
-  address_prefix       = "10.1.0.0/24"
+  address_prefixes     = ["10.1.0.0/24"]
 
   delegation {
     name = "delegation"
@@ -1253,7 +1253,7 @@ resource "azurerm_subnet" "test" {
   name                 = "testsubnet"
   resource_group_name  = azurerm_resource_group.test.name
   virtual_network_name = azurerm_virtual_network.test.name
-  address_prefix       = "10.1.0.0/24"
+  address_prefixes     = ["10.1.0.0/24"]
 
   delegation {
     name = "delegation"
@@ -1324,7 +1324,7 @@ resource "azurerm_subnet" "test" {
   name                 = "testsubnet"
   resource_group_name  = azurerm_resource_group.test.name
   virtual_network_name = azurerm_virtual_network.test.name
-  address_prefix       = "10.1.0.0/24"
+  address_prefixes     = ["10.1.0.0/24"]
 
   delegation {
     name = "delegation"
@@ -1370,9 +1370,7 @@ resource "azurerm_container_group" "test" {
   }
 
   dns_config {
-    nameservers    = ["reddog.microsoft.com", "somecompany.somedomain"]
-    options        = ["one:option", "two:option", "red:option", "blue:option"]
-    search_domains = ["default.svc.cluster.local."]
+    nameservers = ["reddog.microsoft.com", "somecompany.somedomain"]
   }
 
   identity {
@@ -1401,8 +1399,8 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
-  os_type             = "windows"
+  ip_address_type     = "Public"
+  os_type             = "Windows"
 
   container {
     name   = "windowsservercore"
@@ -1463,9 +1461,9 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   dns_name_label      = "acctestcontainergroup-%d"
-  os_type             = "windows"
+  os_type             = "Windows"
   restart_policy      = "Never"
 
   container {
@@ -1585,7 +1583,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   dns_name_label      = "acctestcontainergroup-%d"
   os_type             = "Linux"
   restart_policy      = "OnFailure"
@@ -1686,7 +1684,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   dns_name_label      = "acctestcontainergroup-%d"
   os_type             = "Linux"
   restart_policy      = "OnFailure"
@@ -1763,7 +1761,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   dns_name_label      = "acctestcontainergroup-%d"
   os_type             = "Linux"
   restart_policy      = "OnFailure"
@@ -1888,7 +1886,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   os_type             = "Linux"
 
   container {
@@ -1948,7 +1946,7 @@ resource "azurerm_container_group" "test" {
   name                = "acctestcontainergroup-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   dns_name_label      = "jerome-aci-label"
   os_type             = "Linux"
 
