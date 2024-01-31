@@ -1174,6 +1174,14 @@ func TestAccLinuxFunctionApp_appStackDocker(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+		{
+			Config: r.appStackDockerUpdate(data, SkuBasicPlan),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("kind").HasValue("functionapp,linux,container"),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 
@@ -2672,27 +2680,66 @@ provider "azurerm" {
 %s
 
 resource "azurerm_linux_function_app" "test" {
-  name                = "acctest-LFA-%d"
+  name                = "xiaxintest-LFA-response"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   service_plan_id     = azurerm_service_plan.test.id
 
-  storage_account_name       = azurerm_storage_account.test.name
-  storage_account_access_key = azurerm_storage_account.test.primary_access_key
+  storage_account_name                           = azurerm_storage_account.test.name
+  storage_account_access_key                     = azurerm_storage_account.test.primary_access_key
+  webdeploy_publish_basic_authentication_enabled = false
+  ftp_publish_basic_authentication_enabled       = false
+
+  site_config {
+    always_on = true
+    application_stack {
+      docker {
+        registry_url      = "docker.io"
+        registry_username = "xiaxin18@outlook.com"
+        registry_password = "yxh99952099@"
+        image_name        = "getting-started"
+        image_tag         = "latest"
+      }
+    }
+  }
+}
+`, r.template(data, planSku))
+}
+
+func (r LinuxFunctionAppResource) appStackDockerUpdate(data acceptance.TestData, planSku string) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+%s
+
+resource "azurerm_linux_function_app" "test" {
+  name                = "xiaxintest-LFA-response"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  service_plan_id     = azurerm_service_plan.test.id
+
+  storage_account_name                           = azurerm_storage_account.test.name
+  storage_account_access_key                     = azurerm_storage_account.test.primary_access_key
+  webdeploy_publish_basic_authentication_enabled = false
+  ftp_publish_basic_authentication_enabled       = false
 
   site_config {
     always_on = true
 
     application_stack {
       docker {
-        registry_url = "https://mcr.microsoft.com"
-        image_name   = "azure-functions/dotnet"
-        image_tag    = "3.0-appservice-quickstart"
+        registry_url      = "docker.io"
+        registry_username = "xiaxin18@outlook.com"
+        registry_password = "yxh99952099@"
+        image_name        = "azurefunctionsimagexiaxin"
+        image_tag         = "v1.0.0"
       }
     }
   }
 }
-`, r.template(data, planSku), data.RandomInteger)
+`, r.template(data, planSku))
 }
 
 func (r LinuxFunctionAppResource) appStackDockerUseMSI(data acceptance.TestData, planSku string) string {

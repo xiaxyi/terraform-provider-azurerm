@@ -278,6 +278,7 @@ func (r LinuxFunctionAppOnContainerResource) Read() sdk.ResourceFunc {
 			if err != nil {
 				return err
 			}
+
 			functionAppOnContainer, err := client.Get(ctx, id.ResourceGroup, id.SiteName)
 			if err != nil {
 				if utils.ResponseWasNotFound(functionAppOnContainer.Response) {
@@ -316,6 +317,10 @@ func (r LinuxFunctionAppOnContainerResource) Read() sdk.ResourceFunc {
 			if err != nil {
 				return fmt.Errorf("flattening linuxFxVersion: %s", err)
 			}
+
+			js, _ := json.Marshal(appSettingsResp)
+			log.Printf("DDDDD APPSETTING RESPONSE %s", js)
+
 			state.unpackLinuxFunctionAppOnContainerAppSettings(appSettingsResp)
 
 			return nil
@@ -359,6 +364,9 @@ func (r LinuxFunctionAppOnContainerResource) Update() sdk.ResourceFunc {
 				return err
 			}
 
+			// need to set this property to true as the config got written to state despite the update action actually failed.
+			metadata.ResourceData.Partial(true)
+
 			var state LinuxFunctionAppOnContainerModel
 			if err := metadata.Decode(&state); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
@@ -390,10 +398,6 @@ func (r LinuxFunctionAppOnContainerResource) Update() sdk.ResourceFunc {
 			if metadata.ResourceData.HasChange("tags") {
 				existing.Tags = tags.FromTypedObject(state.Tags)
 			}
-
-			js1, _ := json.Marshal(existing.SiteConfig)
-			log.Printf("DDDDD update%s", js1)
-
 			updateFuture, err := client.CreateOrUpdate(ctx, id.ResourceGroup, id.SiteName, existing)
 			if err != nil {
 				return fmt.Errorf("updating Linux %s: %+v", id, err)
@@ -403,7 +407,7 @@ func (r LinuxFunctionAppOnContainerResource) Update() sdk.ResourceFunc {
 			}
 
 			if _, err := client.UpdateConfiguration(ctx, id.ResourceGroup, id.SiteName, web.SiteConfigResource{SiteConfig: existing.SiteConfig}); err != nil {
-				return fmt.Errorf("updating Site Config for Linux %s: %+v", id, err)
+				return fmt.Errorf("updating Site Config for Linux %s: %s", id, err)
 			}
 			return nil
 		},
