@@ -82,7 +82,8 @@ resource "azurerm_redhat_openshift_cluster" "example" {
   resource_group_name = azurerm_resource_group.example.name
 
   cluster_profile {
-    domain = "aro-example.com"
+    domain  = "aro-example.com"
+    version = "4.13.23"
   }
 
   network_profile {
@@ -138,17 +139,17 @@ The following arguments are supported:
 
 * `service_principal` - (Required) A `service_principal` block as defined below.
 
-* `main_profile` - (Required) A `main_profile` block as defined below.
+* `main_profile` - (Required) A `main_profile` block as defined below. Changing this forces a new resource to be created.
 
-* `worker_profile` - (Required) A `worker_profile` block as defined below.
+* `worker_profile` - (Required) A `worker_profile` block as defined below. Changing this forces a new resource to be created.
 
-* `cluster_profile` - (Required) A `cluster_profile` block as defined below.
+* `cluster_profile` - (Required) A `cluster_profile` block as defined below. Changing this forces a new resource to be created.
 
-* `api_server_profile` - (Required) An `api_server_profile` block as defined below.
+* `api_server_profile` - (Required) An `api_server_profile` block as defined below. Changing this forces a new resource to be created.
 
-* `ingress_profile` - (Required) An `ingress_profile` block as defined below.
+* `ingress_profile` - (Required) An `ingress_profile` block as defined below. Changing this forces a new resource to be created.
 
-* `network_profile` - (Required) A `network_profile` block as defined below.
+* `network_profile` - (Required) A `network_profile` block as defined below. Changing this forces a new resource to be created.
 
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
@@ -172,7 +173,7 @@ A `main_profile` block supports the following:
 
 * `encryption_at_host_enabled` - (Optional) Whether main virtual machines are encrypted at host. Defaults to `false`. Changing this forces a new resource to be created.
 
-**NOTE:** `encryption_at_host_enabled` is only available for certain VM sizes and the `EncryptionAtHost` feature must be enabled for your subscription. Please see the [Azure documentation](https://learn.microsoft.com/azure/virtual-machines/disks-enable-host-based-encryption-portal?tabs=azure-powershell) for more information.
+~> **NOTE:** `encryption_at_host_enabled` is only available for certain VM sizes and the `EncryptionAtHost` feature must be enabled for your subscription. Please see the [Azure documentation](https://learn.microsoft.com/azure/virtual-machines/disks-enable-host-based-encryption-portal?tabs=azure-powershell) for more information.
 
 * `disk_encryption_set_id` - (Optional) The resource ID of an associated disk encryption set. Changing this forces a new resource to be created.
 
@@ -190,7 +191,7 @@ A `worker_profile` block supports the following:
 
 * `encryption_at_host_enabled` - (Optional) Whether worker virtual machines are encrypted at host. Defaults to `false`. Changing this forces a new resource to be created.
 
-**NOTE:** `encryption_at_host_enabled` is only available for certain VM sizes and the `EncryptionAtHost` feature must be enabled for your subscription. Please see the [Azure documentation](https://learn.microsoft.com/azure/virtual-machines/disks-enable-host-based-encryption-portal?tabs=azure-powershell) for more information.
+~> **NOTE:** `encryption_at_host_enabled` is only available for certain VM sizes and the `EncryptionAtHost` feature must be enabled for your subscription. Please see the [Azure documentation](https://learn.microsoft.com/azure/virtual-machines/disks-enable-host-based-encryption-portal?tabs=azure-powershell) for more information.
 
 * `disk_encryption_set_id` - (Optional) The resource ID of an associated disk encryption set. Changing this forces a new resource to be created.
 
@@ -198,7 +199,7 @@ A `worker_profile` block supports the following:
 
 A `cluster_profile` block supports the following:
 
-* `version` - (Required) The version of the OpenShift cluster. Changing this forces a new resource to be created.
+* `version` - (Required) The version of the OpenShift cluster. Available versions can be found with the Azure CLI command `az aro get-versions --location <region>`. Changing this forces a new resource to be created.
 
 * `domain` - (Required) The custom domain for the cluster. For more info, see [Prepare a custom domain for your cluster](https://docs.microsoft.com/azure/openshift/tutorial-create-cluster#prepare-a-custom-domain-for-your-cluster-optional). Changing this forces a new resource to be created.
 
@@ -214,19 +215,19 @@ A `network_profile` block supports the following:
 
 * `service_cidr` - (Required) The network range used by the OpenShift service. Changing this forces a new resource to be created.
 
-* `outbound_type` - (Optional) The outbound (egress) routing method. Possible values are `Loadbalancer` and `UserDefinedRouting`. Defaults to `LoadBalancer`. Changing this forces a new resource to be created.
+* `outbound_type` - (Optional) The outbound (egress) routing method. Possible values are `Loadbalancer` and `UserDefinedRouting`. Defaults to `Loadbalancer`. Changing this forces a new resource to be created.
 
 ---
 
 A `api_server_profile` block supports the following:
 
-* `visibility` - (Required) Cluster API server visibility. Supported values are `Public` and `Private`. Defaults to `Public`. Changing this forces a new resource to be created.
+* `visibility` - (Required) Cluster API server visibility. Supported values are `Public` and `Private`. Changing this forces a new resource to be created.
 
 ---
 
 A `ingress_profile` block supports the following:
 
-* `visibility` - (Required) Cluster Ingress visibility. Supported values are `Public` and `Private`. Defaults to `Public`. Changing this forces a new resource to be created.
+* `visibility` - (Required) Cluster Ingress visibility. Supported values are `Public` and `Private`. Changing this forces a new resource to be created.
 
 ---
 

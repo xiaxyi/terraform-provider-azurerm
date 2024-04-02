@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-06-01/loadbalancers"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-09-01/loadbalancers"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -332,7 +332,7 @@ resource "azurerm_lb_rule" "test" {
   disable_outbound_snat   = true
   enable_floating_ip      = true
   enable_tcp_reset        = true
-  idle_timeout_in_minutes = 10
+  idle_timeout_in_minutes = 100
   load_distribution       = "SourceIP"
 
   frontend_ip_configuration_name = azurerm_lb.test.frontend_ip_configuration.0.name

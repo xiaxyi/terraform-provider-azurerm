@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package azuresdkhacks
 
 import "github.com/hashicorp/go-azure-sdk/resource-manager/migrate/2020-01-01/runasaccounts"
@@ -8,7 +11,6 @@ type VMwareRunAsAccount struct {
 	Properties *RunAsAccountProperties `json:"properties,omitempty"`
 	Type       *string                 `json:"type,omitempty"`
 }
-
 type RunAsAccountProperties struct {
 	CreatedTimestamp *string                       `json:"createdTimestamp,omitempty"`
 	CredentialType   *runasaccounts.CredentialType `json:"credentialType,omitempty"`
