@@ -2,13 +2,15 @@ package helpers
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-01-01/webapps"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azurerm/utils"
 	"github.com/tombuildsstuff/kermit/sdk/web/2022-09-01/web"
-	"strings"
 )
 
 type Registry struct {
@@ -94,19 +96,19 @@ func SiteConfigSchemaLinuxFunctionAppOnContainer() *pluginsdk.Schema {
 	}
 }
 
-func ExpandSiteConfigLinuxFunctionAppOnContainer(siteConfig []SiteConfigLinuxFunctionAppOnContainer, existing *web.SiteConfig, metadata sdk.ResourceMetaData, registry Registry, version string, storageString string) (*web.SiteConfig, error) {
+func ExpandSiteConfigLinuxFunctionAppOnContainer(siteConfig []SiteConfigLinuxFunctionAppOnContainer, existing *webapps.SiteConfig, metadata sdk.ResourceMetaData, registry Registry, version string, storageString string) (*webapps.SiteConfig, error) {
 	if len(siteConfig) == 0 {
 		return nil, nil
 	}
 
-	expanded := &web.SiteConfig{}
+	expanded := &webapps.SiteConfig{}
 	if existing != nil {
 		expanded = existing
 		// need to zero fxversion to re-calculate based on changes below or removing app_stack doesn't apply
 		expanded.LinuxFxVersion = utils.String("")
 	}
 
-	appSettings := make([]web.NameValuePair, 0)
+	appSettings := make([]webapps.NameValuePair, 0)
 	if existing != nil && existing.AppSettings != nil {
 		appSettings = *existing.AppSettings
 	}
@@ -133,20 +135,16 @@ func ExpandSiteConfigLinuxFunctionAppOnContainer(siteConfig []SiteConfigLinuxFun
 	expanded.AppSettings = &appSettings
 
 	if metadata.ResourceData.HasChange("site_config.0.ftps_state") {
-		expanded.FtpsState = web.FtpsState(linuxFunctionOnContainerSiteConfig.FtpsState)
+		expanded.FtpsState = pointer.To(webapps.FtpsState(linuxFunctionOnContainerSiteConfig.FtpsState))
 	}
 	expanded.Use32BitWorkerProcess = utils.Bool(linuxFunctionOnContainerSiteConfig.Use32BitWorker)
 	return expanded, nil
 }
 
-func FlattenSiteConfigLinuxFunctionAppOnContainer(functionAppOnContainer *web.SiteConfig) (*SiteConfigLinuxFunctionAppOnContainer, error) {
-	if functionAppOnContainer == nil {
-		return nil, fmt.Errorf("flattening site config: SiteConfig was nil")
-	}
-
+func FlattenSiteConfigLinuxFunctionAppOnContainer(functionAppOnContainer *webapps.SiteConfig) (*SiteConfigLinuxFunctionAppOnContainer, error) {
 	result := &SiteConfigLinuxFunctionAppOnContainer{
 		Use32BitWorker: pointer.From(functionAppOnContainer.Use32BitWorkerProcess),
-		FtpsState:      string(functionAppOnContainer.FtpsState),
+		FtpsState:      string(pointer.From(functionAppOnContainer.FtpsState)),
 	}
 
 	return result, nil

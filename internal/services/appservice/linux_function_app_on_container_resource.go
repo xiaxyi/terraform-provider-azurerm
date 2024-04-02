@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-01-01/resourceproviders"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-01-01/webapps"
 	"log"
 	"strings"
 	"time"
@@ -14,7 +18,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/containerapps/2023-05-01/managedenvironments"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/appservice/helpers"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/services/appservice/parse"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/appservice/validate"
 	kvValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/keyvault/validate"
 	storageValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/storage/validate"
@@ -22,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azurerm/utils"
-	"github.com/tombuildsstuff/kermit/sdk/web/2022-09-01/web"
 )
 
 type LinuxFunctionAppOnContainerResource struct{}
@@ -57,7 +59,7 @@ func (r LinuxFunctionAppOnContainerResource) ResourceType() string {
 }
 
 func (r LinuxFunctionAppOnContainerResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
-	return validate.FunctionAppID
+	return commonids.ValidateFunctionAppID
 }
 
 func (r LinuxFunctionAppOnContainerResource) Arguments() map[string]*pluginsdk.Schema {
@@ -185,23 +187,24 @@ func (r LinuxFunctionAppOnContainerResource) Create() sdk.ResourceFunc {
 			}
 
 			client := metadata.Client.AppService.WebAppsClient
+			resourcesClient := metadata.Client.AppService.ResourceProvidersClient
 			containerEnvClient := metadata.Client.ContainerApps.ManagedEnvironmentClient
 			subscriptionId := metadata.Client.Account.SubscriptionId
 
-			id := parse.NewFunctionAppID(subscriptionId, linuxFunctionAppOnContainer.ResourceGroup, linuxFunctionAppOnContainer.Name)
+			id := commonids.NewAppServiceID(subscriptionId, linuxFunctionAppOnContainer.ResourceGroup, linuxFunctionAppOnContainer.Name)
 
-			existing, err := client.Get(ctx, id.ResourceGroup, id.SiteName)
-			if err != nil && !utils.ResponseWasNotFound(existing.Response) {
+			existing, err := client.Get(ctx, id)
+			if err != nil && !response.WasNotFound(existing.HttpResponse) {
 				return fmt.Errorf("checking for presence of existing Linux %s: %+v", id, err)
 			}
 
-			if !utils.ResponseWasNotFound(existing.Response) {
+			if !response.WasNotFound(existing.HttpResponse) {
 				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
-			availabilityRequest := web.ResourceNameAvailabilityRequest{
-				Name: utils.String(linuxFunctionAppOnContainer.Name),
-				Type: web.CheckNameResourceTypesMicrosoftWebsites,
+			availabilityRequest := resourceproviders.ResourceNameAvailabilityRequest{
+				Name: linuxFunctionAppOnContainer.Name,
+				Type: resourceproviders.CheckNameResourceTypesMicrosoftPointWebSites,
 			}
 
 			envId, err := managedenvironments.ParseManagedEnvironmentID(linuxFunctionAppOnContainer.ManagedEnvironmentId)
@@ -214,12 +217,14 @@ func (r LinuxFunctionAppOnContainerResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("reading %s for %s: %+v", *envId, id, err)
 			}
 
-			checkName, err := client.CheckNameAvailability(ctx, availabilityRequest)
+			subId := commonids.NewSubscriptionID(subscriptionId)
+
+			checkName, err := resourcesClient.CheckNameAvailability(ctx, subId, availabilityRequest)
 			if err != nil {
 				return fmt.Errorf("checking name availability for Linux %s: %+v", id, err)
 			}
-			if checkName.NameAvailable != nil && !*checkName.NameAvailable {
-				return fmt.Errorf("the Site Name %q failed the availability check: %+v", id.SiteName, *checkName.Message)
+			if model := checkName.Model; model != nil && model.NameAvailable != nil && !*model.NameAvailable {
+				return fmt.Errorf("the Site Name %q failed the availability check: %+v", id.SiteName, *model.Message)
 			}
 
 			// storage using MSI is currently not supported in function on container.
@@ -240,13 +245,13 @@ func (r LinuxFunctionAppOnContainerResource) Create() sdk.ResourceFunc {
 			siteConfig, err := helpers.ExpandSiteConfigLinuxFunctionAppOnContainer(linuxFunctionAppOnContainer.SiteConfig, nil, metadata, linuxFunctionAppOnContainer.Registries[0], linuxFunctionAppOnContainer.FunctionExtensionsVersion, storageString)
 			siteConfig.LinuxFxVersion = helpers.EncodeLinuxFunctionAppOnContainerLinuxFxVersion(linuxFunctionAppOnContainer.Registries, linuxFunctionAppOnContainer.ContainerImage)
 
-			siteEnvelope := web.Site{
-				Tags:     tags.FromTypedObject(linuxFunctionAppOnContainer.Tags),
-				Location: utils.String(location.Normalize(env.Model.Location)),
+			siteEnvelope := webapps.Site{
+				Tags:     pointer.To(linuxFunctionAppOnContainer.Tags),
+				Location: location.Normalize(env.Model.Location),
 				Kind:     utils.String("functionapp,linux,container,azurecontainerapps"),
-				SiteProperties: &web.SiteProperties{
+				Properties: &webapps.SiteProperties{
 					SiteConfig:           siteConfig,
-					ManagedEnvironmentID: pointer.To(linuxFunctionAppOnContainer.ManagedEnvironmentId),
+					ManagedEnvironmentId: pointer.To(linuxFunctionAppOnContainer.ManagedEnvironmentId),
 				},
 			}
 			siteConfig.AppSettings = helpers.MergeUserAppSettings(siteConfig.AppSettings, linuxFunctionAppOnContainer.AppSettings)
@@ -254,13 +259,8 @@ func (r LinuxFunctionAppOnContainerResource) Create() sdk.ResourceFunc {
 			js, _ := json.Marshal(siteEnvelope)
 			log.Printf("DDDDD after%s", js)
 
-			future, err := client.CreateOrUpdate(ctx, id.ResourceGroup, id.SiteName, siteEnvelope)
-			if err != nil {
-				return fmt.Errorf("creating Linux %s: %+v", id, err)
-			}
-
-			if err := future.WaitForCompletionRef(ctx, client.Client); err != nil {
-				return fmt.Errorf("waiting for creation of Linux %s: %+v", id, err)
+			if err := client.CreateOrUpdateThenPoll(ctx, id, siteEnvelope); err != nil {
+				return fmt.Errorf("creating Linux Function On Container %s: %+v", id, err)
 			}
 
 			metadata.SetID(id)
@@ -274,54 +274,53 @@ func (r LinuxFunctionAppOnContainerResource) Read() sdk.ResourceFunc {
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.AppService.WebAppsClient
-			id, err := parse.FunctionAppID(metadata.ResourceData.Id())
+			id, err := commonids.ParseFunctionAppID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			functionAppOnContainer, err := client.Get(ctx, id.ResourceGroup, id.SiteName)
+			functionAppOnContainer, err := client.Get(ctx, *id)
 			if err != nil {
-				if utils.ResponseWasNotFound(functionAppOnContainer.Response) {
+				if response.WasNotFound(functionAppOnContainer.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
 				return fmt.Errorf("reading Linux %s: %+v", id, err)
 			}
 
-			if functionAppOnContainer.SiteProperties == nil {
-				return fmt.Errorf("reading properties of Linux %s: %+v", id, err)
-			}
-
-			props := *functionAppOnContainer.SiteProperties
-
-			appSettingsResp, err := client.ListApplicationSettings(ctx, id.ResourceGroup, id.SiteName)
+			appSettingsResp, err := client.ListApplicationSettings(ctx, *id)
 			if err != nil {
 				return fmt.Errorf("reading App Settings for Linux %s: %+v", id, err)
 			}
 
-			state := LinuxFunctionAppOnContainerModel{
-				Name:                 id.SiteName,
-				ResourceGroup:        id.ResourceGroup,
-				ManagedEnvironmentId: pointer.From(props.ManagedEnvironmentID),
-				Tags:                 tags.ToTypedObject(functionAppOnContainer.Tags),
+			if model := functionAppOnContainer.Model; model != nil {
+				state := LinuxFunctionAppOnContainerModel{
+					Name:          id.SiteName,
+					ResourceGroup: id.ResourceGroupName,
+					Tags:          pointer.From(model.Tags),
+				}
+
+				if props := model.Properties; props != nil {
+					state.ManagedEnvironmentId = pointer.From(props.ManagedEnvironmentId)
+					configResp, err := client.GetConfiguration(ctx, *id)
+					if err != nil {
+						return fmt.Errorf("making Read request on AzureRM Function App Configuration %q: %+v", id.SiteName, err)
+					}
+
+					if configRespModel := configResp.Model; configRespModel != nil && configRespModel.Properties != nil {
+						siteConfig, err := helpers.FlattenSiteConfigLinuxFunctionAppOnContainer(configRespModel.Properties)
+						state.SiteConfig = []helpers.SiteConfigLinuxFunctionAppOnContainer{*siteConfig}
+						state.ContainerImage, err = helpers.DecodeLinuxFunctionAppOnContainerLinuxFxVersion(configRespModel.Properties.LinuxFxVersion)
+						if err != nil {
+							return fmt.Errorf("flattening linuxFxVersion: %s", err)
+						}
+					}
+
+					js, _ := json.Marshal(appSettingsResp)
+					log.Printf("DDDDD APPSETTING RESPONSE %s", js)
+
+					state.unpackLinuxFunctionAppOnContainerAppSettings(*appSettingsResp.Model, metadata)
+				}
 			}
-
-			configResp, err := client.GetConfiguration(ctx, id.ResourceGroup, id.SiteName)
-			if err != nil {
-				return fmt.Errorf("making Read request on AzureRM Function App Configuration %q: %+v", id.SiteName, err)
-			}
-
-			siteConfig, err := helpers.FlattenSiteConfigLinuxFunctionAppOnContainer(configResp.SiteConfig)
-			state.SiteConfig = []helpers.SiteConfigLinuxFunctionAppOnContainer{*siteConfig}
-
-			state.ContainerImage, err = helpers.DecodeLinuxFunctionAppOnContainerLinuxFxVersion(configResp.LinuxFxVersion)
-			if err != nil {
-				return fmt.Errorf("flattening linuxFxVersion: %s", err)
-			}
-
-			js, _ := json.Marshal(appSettingsResp)
-			log.Printf("DDDDD APPSETTING RESPONSE %s", js)
-
-			state.unpackLinuxFunctionAppOnContainerAppSettings(appSettingsResp)
 
 			return nil
 		},
@@ -333,15 +332,17 @@ func (r LinuxFunctionAppOnContainerResource) Delete() sdk.ResourceFunc {
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.AppService.WebAppsClient
-			id, err := parse.FunctionAppID(metadata.ResourceData.Id())
+			id, err := commonids.ParseFunctionAppID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 			metadata.Logger.Infof("deleting Linux %s", *id)
 
-			deleteMetrics := true
-			deleteEmptyServerFarm := false
-			if _, err := client.Delete(ctx, id.ResourceGroup, id.SiteName, &deleteMetrics, &deleteEmptyServerFarm); err != nil {
+			delOptions := webapps.DeleteOperationOptions{
+				DeleteEmptyServerFarm: pointer.To(false),
+				DeleteMetrics:         pointer.To(false),
+			}
+			if _, err := client.Delete(ctx, *id, delOptions); err != nil {
 				return fmt.Errorf("deleting Linux %s: %+v", id, err)
 			}
 			return nil
@@ -359,7 +360,7 @@ func (r LinuxFunctionAppOnContainerResource) Update() sdk.ResourceFunc {
 			}
 
 			client := metadata.Client.AppService.WebAppsClient
-			id, err := parse.FunctionAppID(metadata.ResourceData.Id())
+			id, err := commonids.ParseFunctionAppID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
@@ -372,10 +373,14 @@ func (r LinuxFunctionAppOnContainerResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			existing, err := client.Get(ctx, id.ResourceGroup, id.SiteName)
+			existing, err := client.Get(ctx, *id)
 			if err != nil {
 				return fmt.Errorf("reading Linux %s: %v", id, err)
 			}
+			if existing.Model == nil || existing.Model.Properties == nil {
+				return fmt.Errorf("reading of Linux %s for update", id)
+			}
+			model := *existing.Model
 
 			storageString := state.StorageAccountName
 			if state.StorageKeyVaultSecretID != "" {
@@ -384,29 +389,25 @@ func (r LinuxFunctionAppOnContainerResource) Update() sdk.ResourceFunc {
 				storageString = fmt.Sprintf(helpers.StorageStringFmt, state.StorageAccountName, state.StorageAccountKey, *storageDomainSuffix)
 			}
 
-			siteConfig, err := helpers.ExpandSiteConfigLinuxFunctionAppOnContainer(state.SiteConfig, existing.SiteConfig, metadata, state.Registries[0], state.FunctionExtensionsVersion, storageString)
+			siteConfig, err := helpers.ExpandSiteConfigLinuxFunctionAppOnContainer(state.SiteConfig, model.Properties.SiteConfig, metadata, state.Registries[0], state.FunctionExtensionsVersion, storageString)
 			if metadata.ResourceData.HasChange("site_config") {
-				existing.SiteConfig = siteConfig
+				model.Properties.SiteConfig = siteConfig
 			}
 
 			if metadata.ResourceData.HasChange("registry") || metadata.ResourceData.HasChange("container_image") {
-				existing.SiteConfig.LinuxFxVersion = helpers.EncodeLinuxFunctionAppOnContainerLinuxFxVersion(state.Registries, state.ContainerImage)
+				model.Properties.SiteConfig.LinuxFxVersion = helpers.EncodeLinuxFunctionAppOnContainerLinuxFxVersion(state.Registries, state.ContainerImage)
 			}
 
-			existing.SiteConfig.AppSettings = helpers.MergeUserAppSettings(siteConfig.AppSettings, state.AppSettings)
+			model.Properties.SiteConfig.AppSettings = helpers.MergeUserAppSettings(siteConfig.AppSettings, state.AppSettings)
 
 			if metadata.ResourceData.HasChange("tags") {
-				existing.Tags = tags.FromTypedObject(state.Tags)
+				model.Tags = pointer.To(state.Tags)
 			}
-			updateFuture, err := client.CreateOrUpdate(ctx, id.ResourceGroup, id.SiteName, existing)
-			if err != nil {
+			if err := client.CreateOrUpdateThenPoll(ctx, *id, model); err != nil {
 				return fmt.Errorf("updating Linux %s: %+v", id, err)
 			}
-			if err := updateFuture.WaitForCompletionRef(ctx, client.Client); err != nil {
-				return fmt.Errorf("waiting to update %s: %+v", id, err)
-			}
 
-			if _, err := client.UpdateConfiguration(ctx, id.ResourceGroup, id.SiteName, web.SiteConfigResource{SiteConfig: existing.SiteConfig}); err != nil {
+			if _, err := client.UpdateConfiguration(ctx, *id, webapps.SiteConfigResource{Properties: model.Properties.SiteConfig}); err != nil {
 				return fmt.Errorf("updating Site Config for Linux %s: %s", id, err)
 			}
 			return nil
@@ -414,7 +415,7 @@ func (r LinuxFunctionAppOnContainerResource) Update() sdk.ResourceFunc {
 	}
 }
 
-func (m *LinuxFunctionAppOnContainerModel) unpackLinuxFunctionAppOnContainerAppSettings(input web.StringDictionary) {
+func (m *LinuxFunctionAppOnContainerModel) unpackLinuxFunctionAppOnContainerAppSettings(input webapps.StringDictionary, metadata sdk.ResourceMetaData) {
 	if input.Properties == nil {
 		return
 	}
@@ -424,27 +425,38 @@ func (m *LinuxFunctionAppOnContainerModel) unpackLinuxFunctionAppOnContainerAppS
 	var dockerSettings helpers.Registry
 	m.BuiltinLogging = false
 
-	for k, v := range input.Properties {
+	for k, v := range *input.Properties {
 		switch k {
 		case "FUNCTIONS_EXTENSION_VERSION":
-			m.FunctionExtensionsVersion = pointer.From(v)
+			m.FunctionExtensionsVersion = v
+		case "WEBSITE_NODE_DEFAULT_VERSION": // Note - This is only set if it's not the default of 12, but we collect it from LinuxFxVersion so can discard it here
+		case "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING":
+			if _, ok := metadata.ResourceData.GetOk("app_settings.WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"); ok {
+				appSettings[k] = v
+			}
+		case "WEBSITE_CONTENTSHARE":
+			if _, ok := metadata.ResourceData.GetOk("app_settings.WEBSITE_CONTENTSHARE"); ok {
+				appSettings[k] = v
+			}
+		case "WEBSITE_HTTPLOGGING_RETENTION_DAYS":
+
 		case "DOCKER_REGISTRY_SERVER_URL":
-			dockerSettings.Server = pointer.From(v)
+			dockerSettings.Server = v
 		case "DOCKER_REGISTRY_SERVER_USERNAME":
-			dockerSettings.UserName = utils.NormalizeNilableString(v)
+			dockerSettings.UserName = v
 		case "DOCKER_REGISTRY_SERVER_PASSWORD":
-			dockerSettings.Password = utils.NormalizeNilableString(v)
+			dockerSettings.Password = v
 		case "APPLICATIONINSIGHTS_CONNECTION_STRING":
-			m.SiteConfig[0].AppInsightsConnectionString = utils.NormalizeNilableString(v)
+			m.SiteConfig[0].AppInsightsConnectionString = v
 		case "AzureWebJobsStorage":
-			if v != nil && strings.HasPrefix(*v, "@Microsoft.KeyVault") {
-				trimmed := strings.TrimPrefix(strings.TrimSuffix(*v, ")"), "@Microsoft.KeyVault(SecretUri=")
+			if strings.HasPrefix(v, "@Microsoft.KeyVault") {
+				trimmed := strings.TrimPrefix(strings.TrimSuffix(v, ")"), "@Microsoft.KeyVault(SecretUri=")
 				m.StorageKeyVaultSecretID = trimmed
 			} else {
 				m.StorageAccountName, m.StorageAccountKey = helpers.ParseWebJobsStorageString(v)
 			}
 		default:
-			appSettings[k] = utils.NormalizeNilableString(v)
+			appSettings[k] = v
 		}
 	}
 	m.AppSettings = appSettings
