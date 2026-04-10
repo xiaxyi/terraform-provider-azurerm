@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package compute_test
@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azurerm/utils"
 )
 
 type ManagedDiskResource struct{}
@@ -921,7 +920,7 @@ func (ManagedDiskResource) Exists(ctx context.Context, clients *clients.Client, 
 		return nil, fmt.Errorf("retrieving Compute Managed Disk %q", id.String())
 	}
 
-	return utils.Bool(resp.Model != nil), nil
+	return pointer.To(resp.Model != nil), nil
 }
 
 func (ManagedDiskResource) empty(data acceptance.TestData) string {
@@ -2413,6 +2412,16 @@ resource "azurerm_disk_access" "test" {
   }
 }
 
+resource "azurerm_disk_access" "test2" {
+  name                = "acctest2%d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+
+  tags = {
+    environment = "staging"
+  }
+}
+
 resource "azurerm_managed_disk" "test" {
   name                  = "acctestd-%d"
   location              = azurerm_resource_group.test.location
@@ -2422,14 +2431,14 @@ resource "azurerm_managed_disk" "test" {
   disk_size_gb          = "4"
   zone                  = "1"
   network_access_policy = "AllowPrivate"
-  disk_access_id        = azurerm_disk_access.test.id
+  disk_access_id        = azurerm_disk_access.test2.id
 
   tags = {
     environment = "acctest"
     cost-center = "ops"
   }
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger)
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
 func (ManagedDiskResource) publicNetworkAccessDefault(data acceptance.TestData) string {
