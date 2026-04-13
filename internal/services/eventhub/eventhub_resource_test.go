@@ -816,14 +816,14 @@ resource "azurerm_eventhub" "test" {
     skip_empty_archives = true
 
     destination {
-      name                   = "EventHubArchive.AzureBlockBlob"
-      archive_name_format    = "Prod_{EventHub}/{Namespace}\\{PartitionId}_{Year}_{Month}/{Day}/{Hour}/{Minute}/{Second}"
-      blob_container_name    = azurerm_storage_container.test.name
-      storage_account_id     = azurerm_storage_account.test.id
-      storage_authentication = "SystemAssigned"
+      name                        = "EventHubArchive.AzureBlockBlob"
+      archive_name_format         = "Prod_{EventHub}/{Namespace}\\{PartitionId}_{Year}_{Month}/{Day}/{Hour}/{Minute}/{Second}"
+      blob_container_name         = azurerm_storage_container.test.name
+      storage_account_id          = azurerm_storage_account.test.id
+      storage_authentication_type = "SystemAssigned"
     }
   }
-  depends_on = [azurerm_eventhub_namespace.test, azurerm_role_assignment.saContributorRoleAssignment]
+  depends_on = [azurerm_eventhub_namespace.test, azurerm_role_assignment.saContributorRoleAssignment, azurerm_role_assignment.saOwnerRoleAssignment]
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomString, data.RandomInteger, data.RandomInteger, enabledString)
 }
@@ -897,12 +897,12 @@ resource "azurerm_eventhub" "test" {
     skip_empty_archives = true
 
     destination {
-      name                      = "EventHubArchive.AzureBlockBlob"
-      archive_name_format       = "Prod_{EventHub}/{Namespace}\\{PartitionId}_{Year}_{Month}/{Day}/{Hour}/{Minute}/{Second}"
-      blob_container_name       = azurerm_storage_container.test.name
-      storage_account_id        = azurerm_storage_account.test.id
-      storage_authentication    = "UserAssigned"
-      storage_authentication_id = azurerm_user_assigned_identity.test.id
+      name                        = "EventHubArchive.AzureBlockBlob"
+      archive_name_format         = "Prod_{EventHub}/{Namespace}\\{PartitionId}_{Year}_{Month}/{Day}/{Hour}/{Minute}/{Second}"
+      blob_container_name         = azurerm_storage_container.test.name
+      storage_account_id          = azurerm_storage_account.test.id
+      storage_authentication_type = "UserAssigned"
+      storage_authentication_id   = azurerm_user_assigned_identity.test.id
     }
   }
 }
