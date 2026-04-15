@@ -1398,7 +1398,7 @@ resource "azurerm_function_app_flex_consumption" "test" {
   service_plan_id     = azurerm_service_plan.test.id
 
   storage_container_type      = "blobContainer"
-  storage_container_endpoint  = "${azurerm_storage_account.backend.primary_blob_endpoint}${azurerm_storage_container.test1-1.name}"
+  storage_container_endpoint  = "${azurerm_storage_account.backend.primary_blob_endpoint}${azurerm_storage_container.test1.name}"
   storage_authentication_type = "StorageAccountConnectionString"
   storage_access_key          = azurerm_storage_account.backend.primary_access_key
   runtime_name                = "node"
@@ -2677,7 +2677,7 @@ resource "azurerm_function_app_flex_consumption" "test" {
 
   deployment_storage {
     container_type      = "blobContainer"
-    container_endpoint  = "${azurerm_storage_account.backend.primary_blob_endpoint}${azurerm_storage_container.test1-1.name}"
+    container_endpoint  = "${azurerm_storage_account.backend.primary_blob_endpoint}${azurerm_storage_container.test1.name}"
     authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.backend.primary_access_key
   }
@@ -4286,6 +4286,12 @@ resource "azurerm_storage_container" "test" {
   container_access_type = "private"
 }
 
+resource "azurerm_storage_container" "test1" {
+  name                  = "acctestblobforfc1"
+  storage_account_name  = azurerm_storage_account.test.name
+  container_access_type = "private"
+}
+
 data "azurerm_storage_account_sas" "test" {
   connection_string = azurerm_storage_account.test.primary_connection_string
   https_only        = true
@@ -4383,7 +4389,7 @@ resource "azurerm_storage_account" "test1" {
 
 resource "azurerm_storage_container" "test1-1" {
   name                  = "acctestblobforfc11"
-  storage_account_name  = azurerm_storage_account.test.name
+  storage_account_name  = azurerm_storage_account.test1.name
   container_access_type = "private"
 }
 
