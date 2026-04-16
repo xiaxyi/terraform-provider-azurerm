@@ -406,6 +406,13 @@ func TestAccEventHub_captureDescriptionIdentityUpdate(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
+			Config: r.captureDescriptionUsingUserAssignedIdentity(data, true),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
 			Config: r.captureDescription(data, true),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
