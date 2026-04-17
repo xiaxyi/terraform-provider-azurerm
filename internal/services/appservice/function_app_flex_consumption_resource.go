@@ -619,9 +619,6 @@ func (r FunctionAppFlexConsumptionResource) Create() sdk.ResourceFunc {
 					},
 				}
 				endpoint, _ := url.Parse(functionAppFlexConsumption.StorageContainerEndpoint)
-				// if err != nil {
-				// 	return fmt.Errorf("parsing storage container endpoint error, the expected format is https://storagename.blob.core.windows.net/containername, the received value is %s", functionAppFlexConsumption.StorageContainerEndpoint)
-				// }
 				deploymentStorageName := strings.Split(endpoint.Host, ".")[0]
 				if functionAppFlexConsumption.StorageAuthType == string(webapps.AuthenticationTypeStorageAccountConnectionString) {
 					deploymentStorage.Authentication.StorageAccountConnectionStringName = pointer.To(deploymentSaConStrName)
