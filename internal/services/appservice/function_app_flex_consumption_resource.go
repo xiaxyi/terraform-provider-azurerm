@@ -907,10 +907,10 @@ func (r FunctionAppFlexConsumptionResource) Read() sdk.ResourceFunc {
 						deploymentStorage := flattenDeploymentStorage(faConfigDeployment.Storage, deploymentSaConStr)
 						state.DeploymentStorage = []DeploymentStorage{deploymentStorage}
 						if !features.FivePointOh() {
-							state.StorageContainerType = string(deploymentStorage.ContainerType)
+							state.StorageContainerType = deploymentStorage.ContainerType
 							state.StorageContainerEndpoint = pointer.From(&deploymentStorage.ContainerEndPoint)
 							if faConfigDeployment.Storage.Authentication != nil {
-								state.StorageAuthType = string(deploymentStorage.AuthenticationType)
+								state.StorageAuthType = deploymentStorage.AuthenticationType
 								if state.StorageAuthType == string(webapps.AuthenticationTypeStorageAccountConnectionString) {
 									_, state.StorageAccessKey = helpers.ParseWebJobsStorageString(deploymentSaConStr)
 								}
@@ -1429,7 +1429,7 @@ func expandBackendStorage(input []BackendStorage, storageDomainSuffix *string) (
 	}
 
 	var backendSaConStr string
-	backendSaUseMsi := false
+	var backendSaUseMsi bool
 
 	backendStorageName := input[0].Name
 	backendSaConStr = backendStorageName
