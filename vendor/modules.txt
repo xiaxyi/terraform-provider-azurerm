@@ -1239,6 +1239,8 @@ github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-01-01/resourceprovid
 github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-01-01/staticsites
 github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-12-01/appserviceplans
 github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-12-01/webapps
+github.com/hashicorp/go-azure-sdk/resource-manager/web/2025-05-01/appserviceplans
+github.com/hashicorp/go-azure-sdk/resource-manager/web/2025-05-01/webapps
 github.com/hashicorp/go-azure-sdk/resource-manager/webpubsub/2024-03-01
 github.com/hashicorp/go-azure-sdk/resource-manager/webpubsub/2024-03-01/webpubsub
 github.com/hashicorp/go-azure-sdk/resource-manager/workloads/2024-09-01

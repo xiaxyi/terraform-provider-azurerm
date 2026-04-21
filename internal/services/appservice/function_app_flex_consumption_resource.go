@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/identity"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-01-01/resourceproviders"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/web/2023-12-01/webapps"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/web/2025-05-01/webapps"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/locks"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/appservice/helpers"
@@ -67,6 +67,7 @@ type FunctionAppFlexConsumptionModel struct {
 	HttpConcurrency               int64                                          `tfschema:"http_concurrency"`
 	AlwaysReady                   []FunctionAppAlwaysReady                       `tfschema:"always_ready"`
 	SiteConfig                    []helpers.SiteConfigFunctionAppFlexConsumption `tfschema:"site_config"`
+	SiteUpdateStrategy            string                                         `tfschema:"site_update_strategy"`
 	Identity                      []identity.ModelSystemAssignedUserAssigned     `tfschema:"identity"`
 	Tags                          map[string]string                              `tfschema:"tags"`
 
@@ -221,6 +222,16 @@ func (r FunctionAppFlexConsumptionResource) Arguments() map[string]*pluginsdk.Sc
 		},
 
 		"site_config": helpers.SiteConfigSchemaFunctionAppFlexConsumption(),
+
+		"site_update_strategy": {
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+			ValidateFunc: validation.StringInSlice([]string{
+				string(webapps.SiteUpdateStrategyTypeRecreate),
+				string(webapps.SiteUpdateStrategyTypeRollingUpdate),
+			}, false),
+			Description: "The update strategy to use when updating the site configuration. Possible values are `Recreate` and `RollingUpdate`. `RollingUpdate` will create a temporary deployment slot, apply the configuration changes to the slot, and then swap it with the production slot. This allows for zero downtime updates but may cause issues with certain configuration changes. The default is `Recreate` which applies the configuration changes directly to the production slot and may cause downtime.",
+		},
 
 		"sticky_settings": helpers.StickySettingsSchema(),
 
@@ -495,10 +506,14 @@ func (r FunctionAppFlexConsumptionResource) Create() sdk.ResourceFunc {
 				}
 			}
 
+			siteUpdateType := webapps.SiteUpdateStrategyType(functionAppFlexConsumption.SiteUpdateStrategy)
 			flexFunctionAppConfig := &webapps.FunctionAppConfig{
 				Deployment:          storageDeployment,
 				Runtime:             &runtime,
 				ScaleAndConcurrency: &scaleAndConcurrencyConfig,
+				SiteUpdateStrategy: &webapps.FunctionsSiteUpdateStrategy{
+					Type: &siteUpdateType,
+				},
 			}
 
 			siteConfig, err := helpers.ExpandSiteConfigFunctionFlexConsumptionApp(functionAppFlexConsumption.SiteConfig, nil, metadata, false, storageString, storageConnStringForFCApp)
@@ -743,6 +758,10 @@ func (r FunctionAppFlexConsumptionResource) Read() sdk.ResourceFunc {
 							state.HttpConcurrency = pointer.From(faConfigScale.Triggers.HTTP.PerInstanceConcurrency)
 						}
 					}
+
+					if faConfigSiteUpdate := functionAppConfig.SiteUpdateStrategy; faConfigSiteUpdate != nil {
+						state.SiteUpdateStrategy = string(pointer.From(faConfigSiteUpdate.Type))
+					}
 				}
 
 				state.unpackFunctionAppFlexConsumptionSettings(*appSettingsResp.Model)
@@ -951,6 +970,13 @@ func (r FunctionAppFlexConsumptionResource) Update() sdk.ResourceFunc {
 					model.Properties.FunctionAppConfig.ScaleAndConcurrency.Triggers = &webapps.FunctionsScaleAndConcurrencyTriggers{
 						HTTP: nil,
 					}
+				}
+			}
+
+			if metadata.ResourceData.HasChange("site_update_strategy") {
+				siteUpdateType := webapps.SiteUpdateStrategyType(state.SiteUpdateStrategy)
+				model.Properties.FunctionAppConfig.SiteUpdateStrategy = &webapps.FunctionsSiteUpdateStrategy{
+					Type: &siteUpdateType,
 				}
 			}
 
