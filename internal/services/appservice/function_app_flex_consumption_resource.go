@@ -886,9 +886,11 @@ func (r FunctionAppFlexConsumptionResource) Read() sdk.ResourceFunc {
 							state.StorageContainerType = deploymentStorage.ContainerType
 							state.StorageContainerEndpoint = pointer.From(&deploymentStorage.ContainerEndPoint)
 							if faConfigDeployment.Storage.Authentication != nil {
-								if state.StorageAuthType == string(webapps.AuthenticationTypeStorageAccountConnectionString) {
+								storageAuthType := pointer.From(faConfigDeployment.Storage.Authentication.Type)
+								if storageAuthType == webapps.AuthenticationTypeStorageAccountConnectionString {
 									_, state.StorageAccessKey = helpers.ParseWebJobsStorageString(deploymentSaConStr)
 								}
+								state.StorageAuthType = string(storageAuthType)
 								state.StorageUserAssignedIdentityID = deploymentStorage.UserAssignedIdentityId
 							}
 						}
