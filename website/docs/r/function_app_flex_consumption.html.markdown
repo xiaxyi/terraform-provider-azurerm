@@ -185,7 +185,7 @@ A `backend_storage` block supports the following:
 
 * `name` - (Required) The name of the Function App backend runtime to access the deployment backend storage.
 
-* `access_key` - (Optional) The access key used by the Function App backend runtime to access the deployment backend storage. Conflicts with `managed_identity_access_enabled`.
+* `access_key` - (Optional) The access key used by the Function App backend runtime to access the deployment backend storage. 
 
 ~> **Note:** When using `name`, if `access_key` is not provided, access via the storage account’s managed identity will automatically be enabled.
 
@@ -203,7 +203,7 @@ A `deployment_storage` block supports the following:
 
 * `container_endpoint` - (Required) The endpoint of the storage container that hosts the application deployment package.
 
-* `access_key` - (Optional) The storage account connection string used to access the deployment storage. This must be specified when `authentication_type` is set to `StorageAccountConnectionString`. Conflicts with `user_assigned_identity_id`.
+* `access_key` - (Optional) The storage account connection string used to access the deployment storage. Conflicts with `user_assigned_identity_id`.
 
 ~> **Note:** When specified, the value of `access_key` is exposed to the app as the environment variable `DEPLOYMENT_STORAGE_CONNECTION_STRING`.
 

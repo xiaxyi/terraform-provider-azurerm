@@ -95,9 +95,8 @@ type FunctionAppAlwaysReady struct {
 }
 
 type DeploymentStorage struct {
-	ContainerType     string `tfschema:"container_type"`
-	ContainerEndPoint string `tfschema:"container_endpoint"`
-	// AuthenticationType     string `tfschema:"authentication_type"`
+	ContainerType          string `tfschema:"container_type"`
+	ContainerEndPoint      string `tfschema:"container_endpoint"`
 	AccessKey              string `tfschema:"access_key"`
 	UserAssignedIdentityId string `tfschema:"user_assigned_identity_id"`
 }
@@ -215,16 +214,6 @@ func (r FunctionAppFlexConsumptionResource) Arguments() map[string]*pluginsdk.Sc
 						ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 						Description:  "The endpoint of the storage container where the function app's code is hosted.",
 					},
-
-					// "authentication_type": {
-					// 	Type:     pluginsdk.TypeString,
-					// 	Required: true,
-					// 	ValidateFunc: validation.StringInSlice([]string{
-					// 		string(webapps.AuthenticationTypeSystemAssignedIdentity),
-					// 		string(webapps.AuthenticationTypeStorageAccountConnectionString),
-					// 		string(webapps.AuthenticationTypeUserAssignedIdentity),
-					// 	}, false),
-					// },
 
 					"access_key": {
 						Type:      pluginsdk.TypeString,
@@ -1370,13 +1359,17 @@ func expandDeploymentStorage(input []DeploymentStorage, connectionStrName string
 	deploymentSaName = strings.Split(endpoint.Host, ".")[0]
 	authType := webapps.AuthenticationTypeStorageAccountConnectionString
 	deploymentStorage.Authentication = &webapps.FunctionsDeploymentStorageAuthentication{}
-	if input[0].AccessKey != "" {
+
+	switch {
+	case input[0].AccessKey != "":
 		deploymentStorage.Authentication.StorageAccountConnectionStringName = pointer.To(connectionStrName)
 		deploymentSaConnectionStr = fmt.Sprintf(StorageStringFmt, deploymentSaName, input[0].AccessKey, *storageDomainSuffix)
-	} else if input[0].UserAssignedIdentityId != "" {
+
+	case input[0].UserAssignedIdentityId != "":
 		deploymentStorage.Authentication.UserAssignedIdentityResourceId = pointer.To(input[0].UserAssignedIdentityId)
 		authType = webapps.AuthenticationTypeUserAssignedIdentity
-	} else {
+
+	default:
 		authType = webapps.AuthenticationTypeSystemAssignedIdentity
 	}
 
