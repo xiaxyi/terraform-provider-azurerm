@@ -95,9 +95,9 @@ type FunctionAppAlwaysReady struct {
 }
 
 type DeploymentStorage struct {
-	ContainerType          string `tfschema:"container_type"`
-	ContainerEndPoint      string `tfschema:"container_endpoint"`
-	AuthenticationType     string `tfschema:"authentication_type"`
+	ContainerType     string `tfschema:"container_type"`
+	ContainerEndPoint string `tfschema:"container_endpoint"`
+	// AuthenticationType     string `tfschema:"authentication_type"`
 	AccessKey              string `tfschema:"access_key"`
 	UserAssignedIdentityId string `tfschema:"user_assigned_identity_id"`
 }
@@ -105,7 +105,6 @@ type DeploymentStorage struct {
 type BackendStorage struct {
 	Name             string `tfschema:"name"`
 	AccessKey        string `tfschema:"access_key"`
-	MsiAccessEnabled bool   `tfschema:"managed_identity_access_enabled"`
 	KeyVaultSecretID string `tfschema:"key_vault_secret_id"`
 }
 
@@ -168,21 +167,9 @@ func (r FunctionAppFlexConsumptionResource) Arguments() map[string]*pluginsdk.Sc
 						Sensitive:    true,
 						ValidateFunc: validation.NoZeroValues,
 						ConflictsWith: []string{
-							"backend_storage.0.managed_identity_access_enabled",
 							"backend_storage.0.key_vault_secret_id",
 						},
 						Description: "The access key which will be used to access the storage account for the Function App.",
-					},
-
-					"managed_identity_access_enabled": {
-						Type:     pluginsdk.TypeBool,
-						Optional: true,
-						Default:  false,
-						ConflictsWith: []string{
-							"backend_storage.0.access_key",
-							"backend_storage.0.key_vault_secret_id",
-						},
-						Description: "Should the Function App use its Managed Identity to access storage?",
 					},
 
 					"key_vault_secret_id": {
@@ -229,15 +216,15 @@ func (r FunctionAppFlexConsumptionResource) Arguments() map[string]*pluginsdk.Sc
 						Description:  "The endpoint of the storage container where the function app's code is hosted.",
 					},
 
-					"authentication_type": {
-						Type:     pluginsdk.TypeString,
-						Required: true,
-						ValidateFunc: validation.StringInSlice([]string{
-							string(webapps.AuthenticationTypeSystemAssignedIdentity),
-							string(webapps.AuthenticationTypeStorageAccountConnectionString),
-							string(webapps.AuthenticationTypeUserAssignedIdentity),
-						}, false),
-					},
+					// "authentication_type": {
+					// 	Type:     pluginsdk.TypeString,
+					// 	Required: true,
+					// 	ValidateFunc: validation.StringInSlice([]string{
+					// 		string(webapps.AuthenticationTypeSystemAssignedIdentity),
+					// 		string(webapps.AuthenticationTypeStorageAccountConnectionString),
+					// 		string(webapps.AuthenticationTypeUserAssignedIdentity),
+					// 	}, false),
+					// },
 
 					"access_key": {
 						Type:      pluginsdk.TypeString,
@@ -910,7 +897,6 @@ func (r FunctionAppFlexConsumptionResource) Read() sdk.ResourceFunc {
 							state.StorageContainerType = deploymentStorage.ContainerType
 							state.StorageContainerEndpoint = pointer.From(&deploymentStorage.ContainerEndPoint)
 							if faConfigDeployment.Storage.Authentication != nil {
-								state.StorageAuthType = deploymentStorage.AuthenticationType
 								if state.StorageAuthType == string(webapps.AuthenticationTypeStorageAccountConnectionString) {
 									_, state.StorageAccessKey = helpers.ParseWebJobsStorageString(deploymentSaConStr)
 								}
@@ -1382,23 +1368,19 @@ func expandDeploymentStorage(input []DeploymentStorage, connectionStrName string
 		return nil, deploymentSaConnectionStr, fmt.Errorf("parsing storage container endpoint error, the expected format is https://storagename.blob.core.windows.net/containername, the received value is %s", input[0].ContainerEndPoint)
 	}
 	deploymentSaName = strings.Split(endpoint.Host, ".")[0]
-	authType := webapps.AuthenticationType(input[0].AuthenticationType)
-	deploymentStorage.Authentication = &webapps.FunctionsDeploymentStorageAuthentication{
-		Type: &authType,
-	}
-	switch authType {
-	case webapps.AuthenticationTypeStorageAccountConnectionString:
-		if input[0].AccessKey == "" {
-			return nil, deploymentSaConnectionStr, fmt.Errorf("the storage account access key must be specified when using the storage key based access")
-		}
+	authType := webapps.AuthenticationTypeStorageAccountConnectionString
+	deploymentStorage.Authentication = &webapps.FunctionsDeploymentStorageAuthentication{}
+	if input[0].AccessKey != "" {
 		deploymentStorage.Authentication.StorageAccountConnectionStringName = pointer.To(connectionStrName)
 		deploymentSaConnectionStr = fmt.Sprintf(StorageStringFmt, deploymentSaName, input[0].AccessKey, *storageDomainSuffix)
-	case webapps.AuthenticationTypeUserAssignedIdentity:
-		if input[0].UserAssignedIdentityId == "" {
-			return nil, deploymentSaConnectionStr, fmt.Errorf("the user assigned identity id must be specified when using the user assigned identity to access the storage account")
-		}
+	} else if input[0].UserAssignedIdentityId != "" {
 		deploymentStorage.Authentication.UserAssignedIdentityResourceId = pointer.To(input[0].UserAssignedIdentityId)
+		authType = webapps.AuthenticationTypeUserAssignedIdentity
+	} else {
+		authType = webapps.AuthenticationTypeSystemAssignedIdentity
 	}
+
+	deploymentStorage.Authentication.Type = &authType
 
 	return &deploymentStorage, deploymentSaConnectionStr, nil
 }
@@ -1412,7 +1394,6 @@ func flattenDeploymentStorage(input *webapps.FunctionsDeploymentStorage, deploym
 		ContainerEndPoint: pointer.From(input.Value),
 	}
 	if input.Authentication != nil {
-		ds.AuthenticationType = string(pointer.From(input.Authentication.Type))
 		if pointer.From(input.Authentication.Type) == webapps.AuthenticationTypeStorageAccountConnectionString {
 			_, ds.AccessKey = helpers.ParseWebJobsStorageString(deploymentSaString)
 		}
@@ -1429,27 +1410,29 @@ func expandBackendStorage(input []BackendStorage, storageDomainSuffix *string) (
 	}
 
 	var backendSaConStr string
-	var backendSaUseMsi bool
 
 	backendStorageName := input[0].Name
-	backendSaConStr = backendStorageName
-	if !input[0].MsiAccessEnabled {
-		if input[0].KeyVaultSecretID != "" {
-			backendSaConStr = fmt.Sprintf(helpers.StorageStringFmtKV, input[0].KeyVaultSecretID)
-		} else {
-			backendSaConStr = fmt.Sprintf(helpers.StorageStringFmt, backendStorageName, input[0].AccessKey, *storageDomainSuffix)
-		}
+	backendSaUseMsi := true
+
+	if input[0].KeyVaultSecretID != "" {
+		backendSaConStr = fmt.Sprintf(helpers.StorageStringFmtKV, input[0].KeyVaultSecretID)
+		backendSaUseMsi = false
+	} else if input[0].AccessKey != "" {
+		backendSaConStr = fmt.Sprintf(helpers.StorageStringFmt, backendStorageName, input[0].AccessKey, *storageDomainSuffix)
+		backendSaUseMsi = false
 	}
-	backendSaUseMsi = input[0].MsiAccessEnabled
+
+	if backendSaConStr == "" {
+		backendSaConStr = backendStorageName
+	}
+
 	return backendSaConStr, backendSaUseMsi
 }
 
 func flattenBackendStorage(input string, backendSaUseMsi bool) []BackendStorage {
 	backendStorageList := make([]BackendStorage, 0)
 
-	bs := BackendStorage{
-		MsiAccessEnabled: backendSaUseMsi,
-	}
+	bs := BackendStorage{}
 
 	if backendSaUseMsi {
 		bs.Name = input

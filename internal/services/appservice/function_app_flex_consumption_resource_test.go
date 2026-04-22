@@ -1428,7 +1428,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -1711,7 +1710,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
 
   backend_storage {
     name                            = azurerm_storage_account.test.name
-    managed_identity_access_enabled = true
   }
 
   storage_container_type      = "blobContainer"
@@ -2568,7 +2566,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -2607,7 +2604,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
 
@@ -2643,7 +2639,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test1.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -2678,7 +2673,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.backend.primary_blob_endpoint}${azurerm_storage_container.test1.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.backend.primary_access_key
   }
   runtime_name           = "node"
@@ -2713,7 +2707,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -2742,13 +2735,11 @@ resource "azurerm_function_app_flex_consumption" "test" {
 
   backend_storage {
     name                            = azurerm_storage_account.test.name
-    managed_identity_access_enabled = true
   }
 
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
 
@@ -2784,7 +2775,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
 
@@ -2875,7 +2865,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
 
@@ -2915,7 +2904,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -2955,7 +2943,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -3018,7 +3005,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -3065,7 +3051,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -3184,7 +3169,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -3223,7 +3207,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -3264,7 +3247,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -3301,7 +3283,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "python"
@@ -3366,7 +3347,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "java"
@@ -3431,7 +3411,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "dotnet-isolated"
@@ -3496,7 +3475,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "powershell"
@@ -3574,7 +3552,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type            = "blobContainer"
     container_endpoint        = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type       = "UserAssignedIdentity"
     user_assigned_identity_id = azurerm_user_assigned_identity.test2.id
   }
   runtime_name           = "node"
@@ -3608,7 +3585,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "SystemAssignedIdentity"
   }
   runtime_name           = "node"
   runtime_version        = "20"
@@ -3646,7 +3622,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type            = "blobContainer"
     container_endpoint        = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type       = "UserAssignedIdentity"
     user_assigned_identity_id = azurerm_user_assigned_identity.test1.id
   }
   runtime_name           = "node"
@@ -3687,7 +3662,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type            = "blobContainer"
     container_endpoint        = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type       = "UserAssignedIdentity"
     user_assigned_identity_id = azurerm_user_assigned_identity.test2.id
   }
   runtime_name           = "node"
@@ -3728,7 +3702,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type            = "blobContainer"
     container_endpoint        = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type       = "UserAssignedIdentity"
     user_assigned_identity_id = azurerm_user_assigned_identity.test2.id
   }
   runtime_name           = "node"
@@ -3768,7 +3741,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type            = "blobContainer"
     container_endpoint        = azurerm_storage_container.test.id
-    authentication_type       = "UserAssignedIdentity"
     user_assigned_identity_id = azurerm_user_assigned_identity.test2.id
   }
   runtime_name           = "node"
@@ -3816,7 +3788,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type            = "blobContainer"
     container_endpoint        = azurerm_storage_container.test.id
-    authentication_type       = "UserAssignedIdentity"
     user_assigned_identity_id = azurerm_user_assigned_identity.test2.id
   }
   runtime_name           = "node"
@@ -3863,7 +3834,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type            = "blobContainer"
     container_endpoint        = azurerm_storage_container.test.id
-    authentication_type       = "UserAssignedIdentity"
     user_assigned_identity_id = azurerm_user_assigned_identity.test2.id
   }
   runtime_name           = "node"
@@ -3912,7 +3882,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type            = "blobContainer"
     container_endpoint        = azurerm_storage_container.test.id
-    authentication_type       = "UserAssignedIdentity"
     user_assigned_identity_id = azurerm_user_assigned_identity.test2.id
   }
   runtime_name           = "node"
@@ -3995,7 +3964,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -4053,7 +4021,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -4108,7 +4075,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
@@ -4200,7 +4166,6 @@ resource "azurerm_function_app_flex_consumption" "test" {
   deployment_storage {
     container_type      = "blobContainer"
     container_endpoint  = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}"
-    authentication_type = "StorageAccountConnectionString"
     access_key          = azurerm_storage_account.test.primary_access_key
   }
   runtime_name           = "node"
