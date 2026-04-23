@@ -863,7 +863,7 @@ resource "azurerm_eventhub" "test" {
       storage_authentication_id   = azurerm_user_assigned_identity.test.id
     }
   }
-	depends_on = [ azurerm_eventhub_namespace.test, azurerm_role_assignment.saContributorRoleAssignment, azurerm_role_assignment.saOwnerRoleAssignment]
+  depends_on = [azurerm_eventhub_namespace.test, azurerm_role_assignment.saContributorRoleAssignment, azurerm_role_assignment.saOwnerRoleAssignment]
 }
 `, r.template(data), data.RandomString, data.RandomString, enabledString)
 }
@@ -1015,7 +1015,7 @@ resource "azurerm_eventhub" "test" {
 
 func (r EventHubResource) template(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-	provider "azurerm" {
+provider "azurerm" {
   features {}
 }
 
