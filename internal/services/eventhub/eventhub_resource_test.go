@@ -728,7 +728,7 @@ func (r EventHubResource) captureDescription(data acceptance.TestData, enabled b
 	return fmt.Sprintf(`
 %s
 resource "azurerm_eventhub_namespace" "test" {
-  name                = "xiaxintestehn-acc"
+  name                = "acctestehn%s"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   sku                 = "Standard"
@@ -738,7 +738,7 @@ resource "azurerm_eventhub_namespace" "test" {
 }
 
 resource "azurerm_eventhub" "test" {
-  name              = "xiaxintest-acc-eh"
+  name              = "acctesteh%s"
   namespace_id      = azurerm_eventhub_namespace.test.id
   partition_count   = 2
   message_retention = 7
@@ -758,7 +758,7 @@ resource "azurerm_eventhub" "test" {
     }
   }
 }
-`, r.template(data), enabledString)
+`, r.template(data), data.RandomString, data.RandomString, enabledString)
 }
 
 func (r EventHubResource) captureDescriptionUsingSystemAssignedIdentity(data acceptance.TestData, enabled bool) string {
@@ -766,7 +766,7 @@ func (r EventHubResource) captureDescriptionUsingSystemAssignedIdentity(data acc
 	return fmt.Sprintf(`
 %s
 resource "azurerm_eventhub_namespace" "test" {
-  name                = "xiaxintestehn-acc"
+  name                = "acctestehn%s"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   sku                 = "Standard"
@@ -788,7 +788,7 @@ resource "azurerm_role_assignment" "saOwnerRoleAssignment" {
 }
 
 resource "azurerm_eventhub" "test" {
-  name              = "xiaxintest-acc-eh"
+  name              = "acctesteh%s"
   namespace_id      = azurerm_eventhub_namespace.test.id
   partition_count   = 2
   message_retention = 7
@@ -810,7 +810,7 @@ resource "azurerm_eventhub" "test" {
   }
   depends_on = [azurerm_role_assignment.saContributorRoleAssignment, azurerm_role_assignment.saOwnerRoleAssignment]
 }
-`, r.template(data), enabledString)
+`, r.template(data), data.RandomString, data.RandomString, enabledString)
 }
 
 func (r EventHubResource) captureDescriptionUsingUserAssignedIdentity(data acceptance.TestData, enabled bool) string {
@@ -819,7 +819,7 @@ func (r EventHubResource) captureDescriptionUsingUserAssignedIdentity(data accep
 %s
 
 resource "azurerm_eventhub_namespace" "test" {
-  name                = "xiaxintestehn-acc"
+  name                = "acctestehn%s"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   sku                 = "Standard"
@@ -842,7 +842,7 @@ resource "azurerm_role_assignment" "saOwnerRoleAssignment" {
 }
 
 resource "azurerm_eventhub" "test" {
-  name              = "xiaxintest-acc-eh"
+  name              = "acctesteh%s"
   namespace_id      = azurerm_eventhub_namespace.test.id
   partition_count   = 2
   message_retention = 7
@@ -865,7 +865,7 @@ resource "azurerm_eventhub" "test" {
   }
 	depends_on = [ azurerm_eventhub_namespace.test, azurerm_role_assignment.saContributorRoleAssignment, azurerm_role_assignment.saOwnerRoleAssignment]
 }
-`, r.template(data), enabledString)
+`, r.template(data), data.RandomString, data.RandomString, enabledString)
 }
 
 func (EventHubResource) retentionDescriptionWithDeleteCleanupPolicy(data acceptance.TestData) string {
@@ -1039,9 +1039,9 @@ resource "azurerm_storage_account" "test" {
 }
 
 resource "azurerm_storage_container" "test" {
-  name                  = "acctest"
+  name                  = "acctest%s"
   storage_account_name  = azurerm_storage_account.test.name
   container_access_type = "private"
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomString)
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomString, data.RandomString)
 }
