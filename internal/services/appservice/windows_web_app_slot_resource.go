@@ -646,6 +646,17 @@ func (r WindowsWebAppSlotResource) Read() sdk.ResourceFunc {
 				StorageAccounts:   helpers.FlattenStorageAccounts(storageAccounts.Model),
 			}
 
+			currentStack := ""
+			if m := siteMetadata.Model; m != nil && m.Properties != nil {
+				p := *m.Properties
+				if v, ok := p["CURRENT_STACK"]; ok {
+					currentStack = v
+				}
+			}
+
+			siteConfig := helpers.SiteConfigWindowsWebAppSlot{}
+			siteConfig.Flatten(webAppSiteSlotConfig.Model.Properties, currentStack)
+
 			if model := webAppSlot.Model; model != nil {
 				state.Kind = pointer.From(model.Kind)
 				state.Tags = pointer.From(model.Tags)
@@ -668,6 +679,7 @@ func (r WindowsWebAppSlotResource) Read() sdk.ResourceFunc {
 					if props.OutboundVnetRouting != nil {
 						state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.OutboundVnetRouting.BackupRestoreTraffic)
 						state.VirtualNetworkImagePullEnabled = pointer.From(props.OutboundVnetRouting.ImagePullTraffic)
+						siteConfig.VnetRouteAllEnabled = pointer.From(props.OutboundVnetRouting.AllTraffic)
 					}
 					if hostingEnv := props.HostingEnvironmentProfile; hostingEnv != nil {
 						hostingEnvId, err := parse.AppServiceEnvironmentIDInsensitively(*hostingEnv.Id)
@@ -697,16 +709,7 @@ func (r WindowsWebAppSlotResource) Read() sdk.ResourceFunc {
 				state.PublishingDeployBasicAuthEnabled = basicAuthWebDeploy
 
 				state.AppSettings = helpers.FlattenWebStringDictionary(appSettings.Model)
-				currentStack := ""
-				if m := siteMetadata.Model; m != nil && m.Properties != nil {
-					p := *m.Properties
-					if v, ok := p["CURRENT_STACK"]; ok {
-						currentStack = v
-					}
-				}
 
-				siteConfig := helpers.SiteConfigWindowsWebAppSlot{}
-				siteConfig.Flatten(webAppSiteSlotConfig.Model.Properties, currentStack)
 				siteConfig.SetHealthCheckEvictionTime(state.AppSettings)
 				state.AppSettings = siteConfig.ParseNodeVersion(state.AppSettings)
 
@@ -879,6 +882,10 @@ func (r WindowsWebAppSlotResource) Update() sdk.ResourceFunc {
 					return err
 				}
 				model.Properties.OutboundVnetRouting.AllTraffic = model.Properties.SiteConfig.VnetRouteAllEnabled
+			}
+
+			if metadata.ResourceData.HasChange("site_config.0.vnet_route_all_enabled") {
+				model.Properties.OutboundVnetRouting.AllTraffic = &sc.VnetRouteAllEnabled
 			}
 
 			if metadata.ResourceData.HasChange("public_network_access_enabled") {

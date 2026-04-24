@@ -762,6 +762,17 @@ func (r WindowsFunctionAppSlotResource) Read() sdk.ResourceFunc {
 				Backup:                           helpers.FlattenBackupConfig(backup.Model),
 				StorageAccounts:                  helpers.FlattenStorageAccounts(storageAccounts.Model),
 			}
+
+			configResp, err := client.GetConfigurationSlot(ctx, *id)
+			if err != nil {
+				return fmt.Errorf("making Read request on AzureRM Function App Configuration %q: %+v", id.SiteName, err)
+			}
+
+			siteConfig, err := helpers.FlattenSiteConfigWindowsFunctionAppSlot(configResp.Model.Properties)
+			if err != nil {
+				return fmt.Errorf("reading Site Config for Windows %s: %+v", id, err)
+			}
+
 			if model := functionAppSlot.Model; model != nil {
 				state.Tags = pointer.From(model.Tags)
 				state.Kind = pointer.From(model.Kind)
@@ -785,6 +796,7 @@ func (r WindowsFunctionAppSlotResource) Read() sdk.ResourceFunc {
 					if props.OutboundVnetRouting != nil {
 						state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.OutboundVnetRouting.BackupRestoreTraffic)
 						state.VnetImagePullEnabled = pointer.From(props.OutboundVnetRouting.ImagePullTraffic)
+						siteConfig.VnetRouteAllEnabled = pointer.From(props.OutboundVnetRouting.AllTraffic)
 					}
 
 					if hostingEnv := props.HostingEnvironmentProfile; hostingEnv != nil {
@@ -819,15 +831,6 @@ func (r WindowsFunctionAppSlotResource) Read() sdk.ResourceFunc {
 					}
 				}
 
-				configResp, err := client.GetConfigurationSlot(ctx, *id)
-				if err != nil {
-					return fmt.Errorf("making Read request on AzureRM Function App Configuration %q: %+v", id.SiteName, err)
-				}
-
-				siteConfig, err := helpers.FlattenSiteConfigWindowsFunctionAppSlot(configResp.Model.Properties)
-				if err != nil {
-					return fmt.Errorf("reading Site Config for Windows %s: %+v", id, err)
-				}
 				state.SiteConfig = []helpers.SiteConfigWindowsFunctionAppSlot{*siteConfig}
 
 				state.unpackWindowsFunctionAppSettings(appSettingsResp.Model, metadata)
@@ -1029,7 +1032,10 @@ func (r WindowsFunctionAppSlotResource) Update() sdk.ResourceFunc {
 					return fmt.Errorf("expanding Site Config for Windows %s: %+v", id, err)
 				}
 				model.Properties.SiteConfig = siteConfig
-				model.Properties.OutboundVnetRouting.AllTraffic = model.Properties.SiteConfig.VnetRouteAllEnabled
+			}
+
+			if metadata.ResourceData.HasChange("site_config.0.vnet_route_all_enabled") {
+				model.Properties.OutboundVnetRouting.AllTraffic = siteConfig.VnetRouteAllEnabled
 			}
 
 			model.Properties.SiteConfig.AppSettings = helpers.MergeUserAppSettings(siteConfig.AppSettings, state.AppSettings)

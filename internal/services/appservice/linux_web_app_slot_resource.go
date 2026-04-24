@@ -604,6 +604,7 @@ func (r LinuxWebAppSlotResource) Read() sdk.ResourceFunc {
 					SiteCredentials:                  helpers.FlattenSiteCredentials(siteCredentials),
 				}
 
+				siteConfig := helpers.SiteConfigLinuxWebAppSlot{}
 				if props := model.Properties; props != nil {
 					state.ClientAffinityEnabled = pointer.From(props.ClientAffinityEnabled)
 					state.ClientCertEnabled = pointer.From(props.ClientCertEnabled)
@@ -619,9 +620,13 @@ func (r LinuxWebAppSlotResource) Read() sdk.ResourceFunc {
 					state.PossibleOutboundIPAddresses = pointer.From(props.PossibleOutboundIPAddresses)
 					state.PossibleOutboundIPAddressList = strings.Split(pointer.From(props.PossibleOutboundIPAddresses), ",")
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
+					siteConfig.Flatten(webAppSiteSlotConfig.Model.Properties)
+					siteConfig.SetHealthCheckEvictionTime(state.AppSettings)
+
 					if props.OutboundVnetRouting != nil {
 						state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.OutboundVnetRouting.BackupRestoreTraffic)
 						state.VnetImagePullEnabled = pointer.From(props.OutboundVnetRouting.ImagePullTraffic)
+						siteConfig.VnetRouteAllEnabled = pointer.From(props.OutboundVnetRouting.AllTraffic)
 					}
 					if hostingEnv := props.HostingEnvironmentProfile; hostingEnv != nil {
 						state.HostingEnvId = pointer.From(hostingEnv.Id)
@@ -647,10 +652,6 @@ func (r LinuxWebAppSlotResource) Read() sdk.ResourceFunc {
 						state.VirtualNetworkSubnetID = subnetId
 					}
 				}
-
-				siteConfig := helpers.SiteConfigLinuxWebAppSlot{}
-				siteConfig.Flatten(webAppSiteSlotConfig.Model.Properties)
-				siteConfig.SetHealthCheckEvictionTime(state.AppSettings)
 
 				if helpers.FxStringHasPrefix(siteConfig.LinuxFxVersion, helpers.FxStringPrefixDocker) {
 					siteConfig.DecodeDockerAppStack(state.AppSettings)
@@ -805,14 +806,17 @@ func (r LinuxWebAppSlotResource) Update() sdk.ResourceFunc {
 				model.Tags = pointer.To(state.Tags)
 			}
 
+			sc := state.SiteConfig[0]
 			if metadata.ResourceData.HasChanges("site_config", "app_settings") {
-				sc := state.SiteConfig[0]
 				siteConfig, err := sc.ExpandForUpdate(metadata, model.Properties.SiteConfig, state.AppSettings)
 				if err != nil {
 					return fmt.Errorf("expanding Site Config for Linux %s: %+v", id, err)
 				}
 				model.Properties.SiteConfig = siteConfig
-				model.Properties.OutboundVnetRouting.AllTraffic = model.Properties.SiteConfig.VnetRouteAllEnabled
+			}
+
+			if metadata.ResourceData.HasChange("site_config.0.vnet_route_all_enabled") {
+				model.Properties.OutboundVnetRouting.AllTraffic = &sc.VnetRouteAllEnabled
 			}
 
 			if metadata.ResourceData.HasChange("public_network_access_enabled") {

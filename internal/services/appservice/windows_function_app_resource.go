@@ -766,6 +766,16 @@ func (r WindowsFunctionAppResource) Read() sdk.ResourceFunc {
 					Kind:          pointer.From(model.Kind),
 				}
 
+				configResp, err := client.GetConfiguration(ctx, *id)
+				if err != nil {
+					return fmt.Errorf("making Read request on AzureRM Function App Configuration %q: %+v", id.SiteName, err)
+				}
+
+				siteConfig, err := helpers.FlattenSiteConfigWindowsFunctionApp(configResp.Model.Properties)
+				if err != nil {
+					return fmt.Errorf("reading Site Config for Windows %s: %+v", id, err)
+				}
+
 				if props := model.Properties; props != nil {
 					state.Enabled = pointer.From(props.Enabled)
 					state.ClientCertMode = string(pointer.From(props.ClientCertMode))
@@ -780,6 +790,7 @@ func (r WindowsFunctionAppResource) Read() sdk.ResourceFunc {
 					if props.OutboundVnetRouting != nil {
 						state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.OutboundVnetRouting.BackupRestoreTraffic)
 						state.VnetImagePullEnabled = pointer.From(props.OutboundVnetRouting.ImagePullTraffic)
+						siteConfig.VnetRouteAllEnabled = pointer.From(props.OutboundVnetRouting.AllTraffic)
 					}
 
 					servicePlanId, err := commonids.ParseAppServicePlanIDInsensitively(pointer.From(props.ServerFarmId))
@@ -815,15 +826,6 @@ func (r WindowsFunctionAppResource) Read() sdk.ResourceFunc {
 					if subnetId := pointer.From(props.VirtualNetworkSubnetId); subnetId != "" {
 						state.VirtualNetworkSubnetID = subnetId
 					}
-				}
-				configResp, err := client.GetConfiguration(ctx, *id)
-				if err != nil {
-					return fmt.Errorf("making Read request on AzureRM Function App Configuration %q: %+v", id.SiteName, err)
-				}
-
-				siteConfig, err := helpers.FlattenSiteConfigWindowsFunctionApp(configResp.Model.Properties)
-				if err != nil {
-					return fmt.Errorf("reading Site Config for Windows %s: %+v", id, err)
 				}
 
 				state.SiteConfig = []helpers.SiteConfigWindowsFunctionApp{*siteConfig}
@@ -1081,7 +1083,10 @@ func (r WindowsFunctionAppResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("site_config") {
 				model.Properties.SiteConfig = siteConfig
-				model.Properties.OutboundVnetRouting.AllTraffic = model.Properties.SiteConfig.VnetRouteAllEnabled
+			}
+
+			if metadata.ResourceData.HasChange("site_config.0.vnet_route_all_enabled") {
+				model.Properties.OutboundVnetRouting.AllTraffic = siteConfig.VnetRouteAllEnabled
 			}
 
 			model.Properties.SiteConfig.AppSettings = helpers.MergeUserAppSettings(siteConfig.AppSettings, state.AppSettings)

@@ -801,11 +801,6 @@ func (r LinuxFunctionAppResource) Read() sdk.ResourceFunc {
 					state.DefaultHostname = pointer.From(props.DefaultHostName)
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
 
-					if props.OutboundVnetRouting != nil {
-						state.VnetImagePullEnabled = pointer.From(props.OutboundVnetRouting.ImagePullTraffic)
-						state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.OutboundVnetRouting.BackupRestoreTraffic)
-					}
-
 					servicePlanId, err := commonids.ParseAppServicePlanIDInsensitively(*props.ServerFarmId)
 					if err != nil {
 						return err
@@ -838,6 +833,12 @@ func (r LinuxFunctionAppResource) Read() sdk.ResourceFunc {
 					siteConfig, err := helpers.FlattenSiteConfigLinuxFunctionApp(configResp.Model.Properties)
 					if err != nil {
 						return fmt.Errorf("reading Site Config for Linux %s: %+v", id, err)
+					}
+
+					if props.OutboundVnetRouting != nil {
+						state.VnetImagePullEnabled = pointer.From(props.OutboundVnetRouting.ImagePullTraffic)
+						state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.OutboundVnetRouting.BackupRestoreTraffic)
+						siteConfig.VnetRouteAllEnabled = pointer.From(props.OutboundVnetRouting.AllTraffic)
 					}
 					state.SiteConfig = []helpers.SiteConfigLinuxFunctionApp{*siteConfig}
 
@@ -1073,6 +1074,10 @@ func (r LinuxFunctionAppResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("site_config") {
 				model.Properties.SiteConfig = siteConfig
+				model.Properties.OutboundVnetRouting.AllTraffic = siteConfig.VnetRouteAllEnabled
+			}
+
+			if metadata.ResourceData.HasChange("site_config.0.vnet_route_all_enabled") {
 				model.Properties.OutboundVnetRouting.AllTraffic = siteConfig.VnetRouteAllEnabled
 			}
 

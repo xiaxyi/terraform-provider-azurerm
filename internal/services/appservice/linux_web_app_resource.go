@@ -629,6 +629,7 @@ func (r LinuxWebAppResource) Read() sdk.ResourceFunc {
 					Tags:              pointer.From(model.Tags),
 				}
 
+				siteConfig := helpers.SiteConfigLinux{}
 				if props := model.Properties; props != nil {
 					state.ClientAffinityEnabled = pointer.From(props.ClientAffinityEnabled)
 					state.ClientCertEnabled = pointer.From(props.ClientCertEnabled)
@@ -648,9 +649,12 @@ func (r LinuxWebAppResource) Read() sdk.ResourceFunc {
 					if err != nil {
 						return err
 					}
+					siteConfig.Flatten(webAppSiteConfig.Model.Properties)
+					siteConfig.SetHealthCheckEvictionTime(state.AppSettings)
 					if props.OutboundVnetRouting != nil {
 						state.VnetImagePullEnabled = pointer.From(props.OutboundVnetRouting.BackupRestoreTraffic)
 						state.VnetImagePullEnabled = pointer.From(props.OutboundVnetRouting.ImagePullTraffic)
+						siteConfig.VnetRouteAllEnabled = pointer.From(props.OutboundVnetRouting.AllTraffic)
 					}
 					state.ServicePlanId = servicePlanId.ID()
 
@@ -674,10 +678,6 @@ func (r LinuxWebAppResource) Read() sdk.ResourceFunc {
 
 				state.PublishingFTPBasicAuthEnabled = basicAuthFTP
 				state.PublishingDeployBasicAuthEnabled = basicAuthWebDeploy
-
-				siteConfig := helpers.SiteConfigLinux{}
-				siteConfig.Flatten(webAppSiteConfig.Model.Properties)
-				siteConfig.SetHealthCheckEvictionTime(state.AppSettings)
 
 				if helpers.FxStringHasPrefix(siteConfig.LinuxFxVersion, helpers.FxStringPrefixDocker) {
 					siteConfig.DecodeDockerAppStack(state.AppSettings)
@@ -834,7 +834,10 @@ func (r LinuxWebAppResource) Update() sdk.ResourceFunc {
 				if err != nil {
 					return err
 				}
-				model.Properties.OutboundVnetRouting.AllTraffic = model.Properties.SiteConfig.VnetRouteAllEnabled
+			}
+
+			if metadata.ResourceData.HasChange("site_config.0.vnet_route_all_enabled") {
+				model.Properties.OutboundVnetRouting.AllTraffic = &sc.VnetRouteAllEnabled
 			}
 
 			if metadata.ResourceData.HasChange("public_network_access_enabled") {

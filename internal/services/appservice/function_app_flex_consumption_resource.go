@@ -226,6 +226,7 @@ func (r FunctionAppFlexConsumptionResource) Arguments() map[string]*pluginsdk.Sc
 		"site_update_strategy": {
 			Type:     pluginsdk.TypeString,
 			Optional: true,
+			Default:  string(webapps.SiteUpdateStrategyTypeRecreate),
 			ValidateFunc: validation.StringInSlice([]string{
 				string(webapps.SiteUpdateStrategyTypeRecreate),
 				string(webapps.SiteUpdateStrategyTypeRollingUpdate),
@@ -536,6 +537,9 @@ func (r FunctionAppFlexConsumptionResource) Create() sdk.ResourceFunc {
 					FunctionAppConfig: flexFunctionAppConfig,
 					ClientCertEnabled: pointer.To(functionAppFlexConsumption.ClientCertEnabled),
 					ClientCertMode:    pointer.To(webapps.ClientCertMode(functionAppFlexConsumption.ClientCertMode)),
+					OutboundVnetRouting: &webapps.OutboundVnetRouting{
+						AllTraffic: siteConfig.VnetRouteAllEnabled,
+					},
 				},
 			}
 
@@ -729,6 +733,9 @@ func (r FunctionAppFlexConsumptionResource) Read() sdk.ResourceFunc {
 				siteConfig, err := helpers.FlattenSiteConfigFunctionAppFlexConsumption(configResp.Model.Properties)
 				if err != nil {
 					return fmt.Errorf("retrieving Site Config for %s: %+v", id, err)
+				}
+				if model.Properties.OutboundVnetRouting != nil {
+					siteConfig.VnetRouteAllEnabled = pointer.From(model.Properties.OutboundVnetRouting.AllTraffic)
 				}
 				state.SiteConfig = []helpers.SiteConfigFunctionAppFlexConsumption{*siteConfig}
 
@@ -937,6 +944,10 @@ func (r FunctionAppFlexConsumptionResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("site_config") {
 				model.Properties.SiteConfig = siteConfig
+			}
+
+			if metadata.ResourceData.HasChange("site_config.0.vnet_route_all_enabled") {
+				model.Properties.OutboundVnetRouting.AllTraffic = siteConfig.VnetRouteAllEnabled
 			}
 
 			if metadata.ResourceData.HasChange("maximum_instance_count") {
