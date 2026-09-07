@@ -376,18 +376,18 @@ func (r FunctionAppFlexConsumptionResource) Arguments() map[string]*pluginsdk.Sc
 		schema["deployment_storage"].Required = false
 		schema["deployment_storage"].RequiredWith = []string{"backend_storage"}
 
+		// Note: O+C because these are deprecated storage settings
 		schema["storage_container_type"] = &pluginsdk.Schema{
-			Type:     pluginsdk.TypeString,
-			Optional: true,
-			Computed: true,
-			ValidateFunc: validation.StringInSlice([]string{
-				string(webapps.FunctionsDeploymentStorageTypeBlobContainer),
-			}, false),
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(webapps.PossibleValuesForFunctionsDeploymentStorageType(), false),
 			ExactlyOneOf: []string{"storage_container_type", "deployment_storage"},
 			Deprecated:   "`storage_container_type` has been deprecated in favour of the `deployment_storage` property and will be removed in v6.0 of the AzureRM Provider.",
 			Description:  "The type of the storage container where the function app's code is hosted. Only `blobContainer` is supported currently.",
 		}
 
+		// Note: O+C because these are deprecated storage settings
 		schema["storage_container_endpoint"] = &pluginsdk.Schema{
 			Type:     pluginsdk.TypeString,
 			Optional: true,
@@ -399,21 +399,19 @@ func (r FunctionAppFlexConsumptionResource) Arguments() map[string]*pluginsdk.Sc
 			Description: "The endpoint of the storage container where the function app's code is hosted.",
 		}
 
+		// Note: O+C because these are deprecated storage settings
 		schema["storage_authentication_type"] = &pluginsdk.Schema{
-			Type:     pluginsdk.TypeString,
-			Optional: true,
-			Computed: true,
-			ValidateFunc: validation.StringInSlice([]string{
-				string(webapps.AuthenticationTypeSystemAssignedIdentity),
-				string(webapps.AuthenticationTypeStorageAccountConnectionString),
-				string(webapps.AuthenticationTypeUserAssignedIdentity),
-			}, false),
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(webapps.PossibleValuesForAuthenticationType(), false),
 			RequiredWith: []string{
 				"storage_container_type",
 			},
 			Deprecated: "`storage_authentication_type` has been deprecated in favour of the `deployment_storage` property and will be removed in v6.0 of the AzureRM Provider.",
 		}
 
+		// Note: O+C because these are deprecated storage settings
 		schema["storage_access_key"] = &pluginsdk.Schema{
 			Type:      pluginsdk.TypeString,
 			Optional:  true,
@@ -426,6 +424,7 @@ func (r FunctionAppFlexConsumptionResource) Arguments() map[string]*pluginsdk.Sc
 			Deprecated:   "`storage_access_key` has been deprecated in favour of the `deployment_storage` property and will be removed in v6.0 of the AzureRM Provider.",
 		}
 
+		// Note: O+C because these are deprecated storage settings
 		schema["storage_user_assigned_identity_id"] = &pluginsdk.Schema{
 			Type:     pluginsdk.TypeString,
 			Optional: true,
@@ -1036,8 +1035,8 @@ func (r FunctionAppFlexConsumptionResource) Update() sdk.ResourceFunc {
 				}
 
 				if metadata.ResourceData.HasChange("storage_container_type") {
-					containerType := webapps.FunctionsDeploymentStorageType(state.StorageContainerType)
-					deploymentStorage.Type = &containerType
+					containerType := pointer.ToEnum[webapps.FunctionsDeploymentStorageType](state.StorageContainerType)
+					deploymentStorage.Type = containerType
 				}
 
 				if metadata.ResourceData.HasChange("storage_access_key") {
