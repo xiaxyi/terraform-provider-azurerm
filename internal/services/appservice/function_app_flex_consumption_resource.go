@@ -1035,8 +1035,7 @@ func (r FunctionAppFlexConsumptionResource) Update() sdk.ResourceFunc {
 				}
 
 				if metadata.ResourceData.HasChange("storage_container_type") {
-					containerType := pointer.ToEnum[webapps.FunctionsDeploymentStorageType](state.StorageContainerType)
-					deploymentStorage.Type = containerType
+					deploymentStorage.Type = pointer.ToEnum[webapps.FunctionsDeploymentStorageType](state.StorageContainerType)
 				}
 
 				if metadata.ResourceData.HasChange("storage_access_key") {
