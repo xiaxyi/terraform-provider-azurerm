@@ -84,7 +84,7 @@ Please follow the format in the example below for listing breaking changes in re
 
 * The deprecated `managed_disk_cmk_key_vault_id` property has been removed.
 * The deprecated `managed_services_cmk_key_vault_id` property has been removed.
-* The value of the `managed_resource_group_id` property is now normalized to the canonical resource ID format. 
+* The value of the `managed_resource_group_id` property is now normalized to the canonical resource ID format.
 
 ### `azurerm_databricks_workspace_root_dbfs_customer_managed_key`
 
@@ -131,6 +131,10 @@ Please follow the format in the example below for listing breaking changes in re
 
 * The `virtual_network_image_pull_enabled` property now defaults to `false`.
 * The deprecated `site_config.vnet_route_all_enabled` property has been removed in favour of the `virtual_network_application_traffic_enabled` property.
+
+### `azurerm_storage_account`
+
+* The deprecated `public_network_access_enabled` property has been removed.
 
 ## Breaking Changes in Data Sources
 
