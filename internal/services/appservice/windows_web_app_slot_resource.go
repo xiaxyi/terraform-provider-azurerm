@@ -237,6 +237,7 @@ func (r WindowsWebAppSlotResource) Arguments() map[string]*pluginsdk.Schema {
 		s["virtual_network_image_pull_enabled"] = &pluginsdk.Schema{
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
+			// Note: O+C because the setting is controlled by virtual_network_application_traffic_enabled.
 			Computed: true,
 		}
 
